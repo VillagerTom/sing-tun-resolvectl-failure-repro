@@ -37,8 +37,9 @@ sync:
 
 # Against the unfixed tree this FAILS, on the assertion that the logger should have
 # been told the writes failed. A passing run means the PR landed.
+# -count=1: never report a cached result - `verify-fix` relies on actually re-running.
 test: sync
-	cd $(SUBMODULE) && go test -run TestReproIssue -v .
+	cd $(SUBMODULE) && go test -count=1 -run TestReproIssue -v .
 
 # The same tests, with the proposed fix applied. Always reverts, pass or fail.
 verify-fix:
