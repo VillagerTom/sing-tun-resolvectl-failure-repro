@@ -1,0 +1,4 @@
+[submodule "sing-tun"]
+	path = sing-tun
+	url = https://github.com/MetaCubeX/sing-tun.git
+	branch = meta
