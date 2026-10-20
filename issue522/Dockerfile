@@ -64,8 +64,11 @@ ENTRYPOINT mkdir -p /run/dbus \
 	ip tuntap add dev Bettbox mode tap; \
 	ip link set Bettbox up; \
 	echo "=== control case from the issue: the same three commands as root ==="; \
-	resolvectl domain Bettbox "~."; resolvectl default-route Bettbox true; \
-	resolvectl dns Bettbox 198.18.0.2 fdfe:dcba:9876::2; \
+	resolvectl domain Bettbox "~." && echo "  domain        ok" || echo "  domain        FAILED"; \
+	resolvectl default-route Bettbox true && echo "  default-route ok" || echo "  default-route FAILED"; \
+	resolvectl dns Bettbox 198.18.0.2 fdfe:dcba:9876::2 && echo "  dns           ok" || echo "  dns           FAILED"; \
+	resolvectl status Bettbox | grep -E 'Current Scopes|DNS Servers|DNS Domain|Default Route'; \
 	echo "=== reverted, now as the unprivileged caller with no agent registered ==="; \
-	resolvectl revert Bettbox; \
+	resolvectl revert Bettbox && echo "  revert        ok" || echo "  revert        FAILED"; \
+	resolvectl status Bettbox | grep -E 'Current Scopes|DNS Servers|DNS Domain|Default Route'; \
 	exec setpriv --reuid=1000 --regid=1000 --init-groups /usr/local/bin/repro522

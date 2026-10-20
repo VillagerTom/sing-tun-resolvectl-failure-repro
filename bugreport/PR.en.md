@@ -137,12 +137,22 @@ precondition ok: systemd-resolved is reachable
 
 Control case first, same container, same three commands as root — all succeed, because
 `sd_bus_query_sender_privilege()` reports the caller as privileged and polkit is never
-consulted:
+consulted. Recent `resolvectl` no longer prints a message on success, so the state is the
+evidence:
 
 ```
-resolvectl domain Bettbox ~.                        -> Bettbox: Bus client set search domain list to: ~.
-resolvectl default-route Bettbox true               -> Bettbox: Bus client set default route setting: yes
-resolvectl dns Bettbox 198.18.0.2 fdfe:dcba:9876::2 -> Bettbox: Bus client set DNS server list to: 198.18.0.2, fdfe:dcba:9876::2
+=== control case from the issue: the same three commands as root ===
+  domain        ok
+  default-route ok
+  dns           ok
+    Current Scopes: none
+       DNS Servers: 198.18.0.2 fdfe:dcba:9876::2
+        DNS Domain: ~.
+     Default Route: yes
+=== reverted, now as the unprivileged caller with no agent registered ===
+  revert        ok
+    Current Scopes: none
+     Default Route: no
 ```
 
 Then as an unprivileged user with no agent registered:

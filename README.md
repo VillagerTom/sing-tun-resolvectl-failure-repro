@@ -162,15 +162,37 @@ after:   --- PASS: TestReproIssue531ResolvedAbsent
 
 ## Environment requirement for `podman build`
 
-`podman build` needs an overlay filesystem. Verify with:
+`podman build` needs an overlay filesystem: buildah mounts the build context through
+overlay regardless of which storage driver is in use. Verify with:
 
 ```sh
 grep overlay /proc/filesystems
 ```
 
-This must print `nodev  overlay`. Rootless builds additionally need either unprivileged
-overlayfs or `fuse-overlayfs`. `podman run` works without it, so a host that fails this
-check can still execute a previously built image, but cannot build these two.
+This must print `nodev  overlay`. If it prints nothing, the filesystem is not available,
+and every build fails with
+
+```
+Error: mounting an overlay over build context directory: creating overlay scaffolding
+for build context directory: mount overlay:...: no such device
+```
+
+Note the failure is `no such device`, not `permission denied` — no amount of `--privileged`,
+`--storage-driver vfs`, a different `TMPDIR`, or `--isolation=chroot` helps, because the
+overlay is not the storage driver. It is usually just an unloaded module:
+
+```sh
+modinfo -F filename overlay   # /lib/modules/$(uname -r)/kernel/fs/overlayfs/overlay.ko.zst
+sudo modprobe overlay
+grep overlay /proc/filesystems   # nodev  overlay
+```
+
+If the module is genuinely absent (a custom kernel built without `CONFIG_OVERLAY_FS`), the
+remaining option is `fuse-overlayfs`, which implements overlay in userspace and needs a
+separate storage root (`podman --storage-driver fuse-overlayfs`).
+
+`podman run` never needs any of this — it uses the storage driver, not an overlay over the
+build context — so a host that cannot build can still run a previously built image.
 
 ## Relationship to `SagerNet/sing-tun`
 

@@ -99,12 +99,21 @@ caller: uid=1000 (unprivileged, so polkit is consulted)
 precondition ok: systemd-resolved is reachable
 ```
 
-先看对照组：同一容器内，同样三条命令以 root 执行——**全部成功**，因为 `sd_bus_query_sender_privilege()` 判定调用方具备特权，polkit 根本不会被咨询：
+先看对照组：同一容器内，同样三条命令以 root 执行——**全部成功**，因为 `sd_bus_query_sender_privilege()` 判定调用方具备特权，polkit 根本不会被咨询。新版 `resolvectl` 成功时不再打印任何消息，所以证据是执行后的状态：
 
 ```
-resolvectl domain Bettbox ~.                        -> Bettbox: Bus client set search domain list to: ~.
-resolvectl default-route Bettbox true               -> Bettbox: Bus client set default route setting: yes
-resolvectl dns Bettbox 198.18.0.2 fdfe:dcba:9876::2 -> Bettbox: Bus client set DNS server list to: 198.18.0.2, fdfe:dcba:9876::2
+=== control case from the issue: the same three commands as root ===
+  domain        ok
+  default-route ok
+  dns           ok
+    Current Scopes: none
+       DNS Servers: 198.18.0.2 fdfe:dcba:9876::2
+        DNS Domain: ~.
+     Default Route: yes
+=== reverted, now as the unprivileged caller with no agent registered ===
+  revert        ok
+    Current Scopes: none
+     Default Route: no
 ```
 
 随后在无 agent 注册的情况下以非特权用户执行：
