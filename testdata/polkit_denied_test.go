@@ -42,7 +42,7 @@ func TestReproPolkitDenied(t *testing.T) {
 		"interactive authentication. However, interactive authentication has not been " +
 		"enabled by the calling program.\n"
 
-	const interfaceName = "Bettbox"
+	const interfaceName = "tun0"
 	invocationLog := reproStubResolvectl(t, resolvectlStderr)
 	recorder := newReproRecordingLogger()
 

@@ -27,7 +27,7 @@ import (
 )
 
 func main() {
-	requestedInterface := flag.String("i", "", "interface to configure (default: Bettbox, else the first non-loopback link)")
+	requestedInterface := flag.String("i", "", "interface to configure (default: tun0, else the first non-loopback link)")
 	flag.Parse()
 
 	fmt.Println("== systemd-resolved is not running: resolvectl fails, sing-tun swallows it ==")
@@ -108,7 +108,7 @@ func main() {
 }
 
 // resolveInterface picks the interface to configure. resolvectl refuses to act on
-// an unknown name, so fall back to the first real link when Bettbox does not exist.
+// an unknown name, so fall back to the first real link when tun0 does not exist.
 func resolveInterface(requested string) string {
 	if requested != "" {
 		return requested
@@ -120,7 +120,7 @@ func resolveInterface(requested string) string {
 	if err == nil {
 		for _, iface := range interfaces {
 			if iface.Flags&net.FlagLoopback == 0 {
-				fmt.Printf("(Bettbox is not present, using %s instead)\n", iface.Name)
+				fmt.Printf("(tun0 is not present, using %s instead)\n", iface.Name)
 				return iface.Name
 			}
 		}

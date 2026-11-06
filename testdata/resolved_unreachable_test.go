@@ -38,7 +38,7 @@ func TestReproResolvedUnreachable(t *testing.T) {
 	const resolvectlStderr = "Failed to connect to service " +
 		"/run/systemd/resolve/io.systemd.Resolve: No such file or directory\n"
 
-	const interfaceName = "Bettbox"
+	const interfaceName = "tun0"
 	invocationLog := reproStubResolvectl(t, resolvectlStderr)
 	recorder := newReproRecordingLogger()
 

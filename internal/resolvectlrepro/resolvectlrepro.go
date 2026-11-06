@@ -48,8 +48,9 @@ var (
 	PolkitDenied = []string{"interactive authentication", "Access denied"}
 )
 
-// DefaultInterface is the TUN device name a Clash.Meta core registers.
-const DefaultInterface = "Bettbox"
+// DefaultInterface is the TUN device name the repros configure. sing-tun passes the
+// configured name through verbatim, so any name works; this is just a conventional one.
+const DefaultInterface = "tun0"
 
 // FakeIPPrefix4 and FakeIPPrefix6 are the TUN addresses for the default fake-ip
 // range 198.18.0.0/15.
@@ -66,7 +67,7 @@ var (
 // (importing it would drag in mipstack and gvisor). The values are pinned from the
 // other side instead — testdata/resolved_unreachable_test.go asserts that the real
 // Options.DNSServerAddress() produces exactly this argv, including
-// `dns Bettbox 198.18.0.2 fdfe:dcba:9876::2` — so any drift is caught there.
+// `dns tun0 198.18.0.2 fdfe:dcba:9876::2` — so any drift is caught there.
 func DNSServers(inet4Address, inet6Address []netip.Prefix) []string {
 	servers := make([]string, 0, len(inet4Address)+len(inet6Address))
 	if len(inet4Address) > 0 {

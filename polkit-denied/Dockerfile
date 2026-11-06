@@ -60,14 +60,14 @@ ENTRYPOINT mkdir -p /run/dbus \
 	sleep 1; \
 	/usr/lib/systemd/systemd-resolved >/var/log/resolved.log 2>&1 & \
 	sleep 2; \
-	ip tuntap add dev Bettbox mode tap; \
-	ip link set Bettbox up; \
+	ip tuntap add dev tun0 mode tap; \
+	ip link set tun0 up; \
 	echo "=== control: the same three commands as root ==="; \
-	resolvectl domain Bettbox "~." && echo "  domain        ok" || echo "  domain        FAILED"; \
-	resolvectl default-route Bettbox true && echo "  default-route ok" || echo "  default-route FAILED"; \
-	resolvectl dns Bettbox 198.18.0.2 fdfe:dcba:9876::2 && echo "  dns           ok" || echo "  dns           FAILED"; \
-	resolvectl status Bettbox | grep -E 'Current Scopes|DNS Servers|DNS Domain|Default Route'; \
+	resolvectl domain tun0 "~." && echo "  domain        ok" || echo "  domain        FAILED"; \
+	resolvectl default-route tun0 true && echo "  default-route ok" || echo "  default-route FAILED"; \
+	resolvectl dns tun0 198.18.0.2 fdfe:dcba:9876::2 && echo "  dns           ok" || echo "  dns           FAILED"; \
+	resolvectl status tun0 | grep -E 'Current Scopes|DNS Servers|DNS Domain|Default Route'; \
 	echo "=== reverted, now as the unprivileged caller with no agent registered ==="; \
-	resolvectl revert Bettbox && echo "  revert        ok" || echo "  revert        FAILED"; \
-	resolvectl status Bettbox | grep -E 'Current Scopes|DNS Servers|DNS Domain|Default Route'; \
+	resolvectl revert tun0 && echo "  revert        ok" || echo "  revert        FAILED"; \
+	resolvectl status tun0 | grep -E 'Current Scopes|DNS Servers|DNS Domain|Default Route'; \
 	exec setpriv --reuid=1000 --regid=1000 --init-groups /usr/local/bin/repro

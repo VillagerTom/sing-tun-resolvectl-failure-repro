@@ -31,10 +31,13 @@ The failure is swallowed twice over:
 DNS was never configured. The teardown counterpart, `unsetSearchDomainForSystemdResolved`,
 does log at Debug — so only the write path is invisible.
 
-| scenario | trigger | `resolvectl` says |
-| --- | --- | --- |
-| **resolved-unreachable** | `systemd-resolved` is not running (Arch default — NetworkManager owns `resolv.conf`) | `Failed to connect to service /run/systemd/resolve/io.systemd.Resolve: …` |
-| **polkit-denied** | `systemd-resolved` is running, but polkit denies because no authentication agent is registered yet | `Access denied as the requested operation requires interactive authentication. …` |
+| scenario | trigger | `resolvectl` says | field report |
+| --- | --- | --- | --- |
+| **resolved-unreachable** | `systemd-resolved` is not running (Arch default — NetworkManager owns `resolv.conf`) | `Failed to connect to service /run/systemd/resolve/io.systemd.Resolve: …` | [Bettbox#531](https://github.com/appshubcc/Bettbox/issues/531) |
+| **polkit-denied** | `systemd-resolved` is running, but polkit denies because no authentication agent is registered yet | `Access denied as the requested operation requires interactive authentication. …` | [Bettbox#522](https://github.com/appshubcc/Bettbox/issues/522) |
+
+The last column links the field reports the two triggers were observed in; this
+repository reproduces them and carries no report text of its own.
 
 ## Layout
 
@@ -73,7 +76,7 @@ All artifacts assert the same thing in the same order, so none of them can pass
 vacuously:
 
 1. **the trigger fired** — with the exact argv sing-tun builds, including
-   `dns Bettbox 198.18.0.2 fdfe:dcba:9876::2` as derived from the fake-ip range
+   `dns tun0 198.18.0.2 fdfe:dcba:9876::2` as derived from the fake-ip range
    `198.18.0.0/15`;
 2. **the commands really failed and the message existed** — replaying one with stderr
    captured returns the text quoted in the table above;
@@ -95,7 +98,7 @@ NOT REPRODUCED: 3/3 writes failed, but not for the reason under test.
 ```
 
 This is not hypothetical — it is exactly what the first version of the `polkit-denied`
-image did, because it never created the `Bettbox` link.
+image did, because it never created the `tun0` link.
 
 `resolved-unreachable/main.go` and `polkit-denied/main.go` run sing-tun's exact call shape
 and then re-issue the identical commands with stderr captured, printing "what sing-tun
@@ -107,7 +110,7 @@ returned error: <nil>   <-- configure() calls this a success
 log output:    <no log record at all>
 
 --- (2) the same three commands, stderr captured ---
-FAILED  resolvectl domain Bettbox ~.
+FAILED  resolvectl domain tun0 ~.
         exit: exit status 1
         stderr: Failed to set domain configuration: ...
 ...
@@ -149,12 +152,14 @@ after:   --- PASS: TestReproResolvedUnreachable
   merely disabled unit with a stale socket gives `Failed to connect to service
   /run/systemd/resolve/io.systemd.Resolve: …`. All three are the same condition, and the
   harness accepts any of them. The deterministic stub in `testdata/` replays the last one
-  verbatim.
+  verbatim. This image has no `CAP_NET_ADMIN` and so cannot create `tun0`; the program
+  falls back to the container's first non-loopback link and the printed argv names that
+  interface instead. Only the name changes, not the shape of the call.
 - **`polkit-denied` needs the real polkit denial**, which cannot be staged with a stub:
   the check happens inside `resolvectl`, against the real
   `org.freedesktop.resolve1.policy` actions. The Dockerfile starts `dbus-daemon`,
   `polkitd` and `systemd-resolved` by hand — no systemd as PID 1 is needed — creates no
-  authentication agent, creates the `Bettbox` link that `resolvectl` insists on resolving
+  authentication agent, creates the `tun0` link that `resolvectl` insists on resolving
   first, and runs the repro as uid 1000. `--privileged` is required both because
   `systemd-resolved` drops privileges to the `systemd-resolve` user and because the tap
   device needs `CAP_NET_ADMIN`.
