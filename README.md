@@ -40,7 +40,7 @@ does log at Debug — so only the write path is invisible.
 
 | path | what it is |
 | --- | --- |
-| `sing-tun/` | git submodule, pinned to `MetaCubeX/sing-tun@bfc9055` (`meta`, v0.4.27-5) — the revision the patch targets |
+| `sing-tun/` | git submodule, pinned to `MetaCubeX/sing-tun@e454d9c` (`meta`, v0.4.29) — the revision the patch targets |
 | `testdata/` | in-package tests that call the **real** unexported function; copied into `sing-tun/` by `make sync`, removed by `make clean` |
 | `resolved-absent/` | standalone repro program + Dockerfile — `systemd-resolved` not running |
 | `polkit-denied/` | standalone repro program + Dockerfile — polkit denies, no auth agent |
