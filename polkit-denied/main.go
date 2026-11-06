@@ -1,19 +1,19 @@
-// Repro for https://github.com/appshubcc/Bettbox/issues/522
+// Repro: polkit denies the writes because no authentication agent is registered yet.
 //
-//	Bettbox starts at login with autostart + auto-connect. systemd-resolved is
-//	running and reachable, so the D-Bus call gets as far as the polkit check. The
-//	desktop authentication agent has not registered with polkitd yet, polkit has no
-//	way to prompt, and resolvectl returns "Access denied as the requested
-//	operation requires interactive authentication". sing-tun discards it. A minute
-//	later the agent is up and the very same commands succeed - so nothing anywhere
-//	records that the first attempt ever failed.
+//	systemd-resolved is running and reachable, so the D-Bus call gets as far as the
+//	polkit check. The four write actions are declared auth_admin / auth_admin_keep,
+//	and a client that starts at login asks before the desktop authentication agent has
+//	registered with polkitd. polkit has nowhere to prompt and denies the request:
+//	"Access denied as the requested operation requires interactive authentication".
+//	sing-tun discards it, and the very same commands succeed a minute later once the
+//	agent is up - so nothing records that the first attempt ever failed.
 //
-// This one needs the environment, not a stub. issue522/Dockerfile builds a container
-// where systemd-resolved and polkit are up, the caller is unprivileged, and no
-// authentication agent exists:
+// This one needs the environment, not a stub. polkit-denied/Dockerfile builds a
+// container where systemd-resolved and polkit are up, the caller is unprivileged, and
+// no authentication agent exists:
 //
-//	podman build -t sing-tun-resolved-repro-522 issue522
-//	podman run --rm --privileged sing-tun-resolved-repro-522
+//	podman build -f polkit-denied/Dockerfile -t sing-tun-resolved-repro-polkit-denied .
+//	podman run --rm --privileged sing-tun-resolved-repro-polkit-denied
 //
 // Exit code 0 means the defect reproduced, 3 means the trigger was absent (you are
 // root, or an agent is registered).
@@ -33,7 +33,7 @@ func main() {
 	interfaceName := flag.String("i", resolvectlrepro.DefaultInterface, "interface to configure")
 	flag.Parse()
 
-	fmt.Println("== Bettbox#522: polkit denies (no auth agent yet), sing-tun swallows it ==")
+	fmt.Println("== polkit denies because no authentication agent is registered: sing-tun swallows it ==")
 	fmt.Println()
 
 	// Polkit is skipped when the caller is EUID 0, because sd_bus_privilege_op
@@ -41,17 +41,17 @@ func main() {
 	// setuid build (works) and the capabilities build (silently broken).
 	if os.Geteuid() == 0 {
 		fmt.Println("TRIGGER ABSENT: running as root, so sd_bus_privilege_op() bypasses polkit entirely.")
-		fmt.Println("               The #522 trigger needs an unprivileged caller - use the image from")
-		fmt.Println("               issue522/Dockerfile, which runs this binary as uid 1000.")
+		fmt.Println("               This trigger needs an unprivileged caller - use the image from")
+		fmt.Println("               polkit-denied/Dockerfile, which runs this binary as uid 1000.")
 		os.Exit(3)
 	}
 	fmt.Printf("caller: uid=%d (unprivileged, so polkit is consulted)\n", os.Geteuid())
 
 	if !resolvectlrepro.Reachable() {
-		fmt.Println("TRIGGER ABSENT: systemd-resolved does not answer, so this is #531's trigger, not #522's.")
+		fmt.Println("TRIGGER ABSENT: systemd-resolved does not answer, so this is the resolved-unreachable trigger.")
 		os.Exit(3)
 	}
-	fmt.Println("precondition ok: systemd-resolved is reachable (unlike #531, the D-Bus call succeeds)")
+	fmt.Println("precondition ok: systemd-resolved is reachable (unlike the resolved-unreachable case, the D-Bus call succeeds)")
 	fmt.Printf("interface under test: %s\n\n", *interfaceName)
 
 	servers := resolvectlrepro.DNSServers(

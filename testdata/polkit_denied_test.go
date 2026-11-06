@@ -1,16 +1,17 @@
 //go:build linux
 
-// Repro for https://github.com/appshubcc/Bettbox/issues/522
+// Repro: polkit denies the writes because no authentication agent is registered yet.
 //
-// Trigger: systemd-resolved IS running and reachable, so the D-Bus call gets as
-// far as the polkit check. When Bettbox starts at login the desktop
-// authentication agent has not registered with polkitd yet, so polkit has no way
-// to prompt. resolvectl returns "Access denied as the requested operation requires
-// interactive authentication", and sing-tun discards it.
+// Trigger: systemd-resolved IS running and reachable, so the D-Bus call gets as far
+// as the polkit check. The four write actions are declared auth_admin /
+// auth_admin_keep, and a client that starts at login asks before the desktop
+// authentication agent has registered with polkitd, so polkit has no way to prompt.
+// resolvectl returns "Access denied as the requested operation requires interactive
+// authentication", and sing-tun discards it.
 //
 // This file is not part of sing-tun. It is copied into the tree by `make sync` and
 // removed again by `make clean`; see ../Makefile. For the real trigger, with no
-// stub at all, use the container image built from ../issue522/Dockerfile.
+// stub at all, use the container image built from ../polkit-denied/Dockerfile.
 //
 // This failure is the worst kind: it is transient and policy-dependent, so the
 // same binary on the same machine succeeds a minute later. Nothing in the logs
@@ -29,9 +30,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestReproIssue522PolkitAgentNotReady(t *testing.T) {
-	// Verbatim stderr the reporter captured from resolvectl during a
-	// login-autostart run (issue #522).
+func TestReproPolkitDenied(t *testing.T) {
+	// Verbatim stderr resolvectl produces when polkit cannot prompt.
 	const resolvectlStderr = "Failed to set domain configuration: Access denied as the " +
 		"requested operation requires interactive authentication. However, interactive " +
 		"authentication has not been enabled by the calling program.\n" +
@@ -81,12 +81,11 @@ func TestReproIssue522PolkitAgentNotReady(t *testing.T) {
 	t.Logf("resolvectl exit error sing-tun discarded: %v", captureErr)
 	t.Logf("resolvectl stderr sing-tun discarded:     %q", captured)
 	t.Logf("sing-tun logger output:                   %s", recorder)
-	t.Logf("note: the teardown half, unsetSearchDomainForSystemdResolved, is equally " +
-		"unobservable - how much of this is reported depends on the tree")
 
 	// The defect: three denied writes, zero records emitted. resolved reports the
 	// interface with no DNS scope, yet nothing says so.
 	require.NotEmpty(t, recorder.Records(),
-		"Bettbox#522: polkit denied all three resolvectl writes, setSearchDomainForSystemdResolved "+
-			"returned nil, and nothing was logged - DNS hijacking was never configured")
+		"polkit denied: polkit rejected all three resolvectl writes, "+
+			"setSearchDomainForSystemdResolved returned nil, and nothing was logged - "+
+			"DNS hijacking was never configured")
 }

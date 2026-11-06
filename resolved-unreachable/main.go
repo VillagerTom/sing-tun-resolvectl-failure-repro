@@ -1,4 +1,4 @@
-// Repro for https://github.com/appshubcc/Bettbox/issues/531
+// Repro: systemd-resolved is not running.
 //
 //	Arch Linux, desktop installed with NetworkManager, TUN enabled, nothing else
 //	touched. systemd-resolved is disabled, /etc/resolv.conf is a plain file holding
@@ -7,8 +7,8 @@
 //
 // Run it in the container built from ./Dockerfile:
 //
-//	podman build -t sing-tun-resolved-repro-531 issue531
-//	podman run --rm sing-tun-resolved-repro-531
+//	podman build -f resolved-unreachable/Dockerfile -t sing-tun-resolved-repro-resolved-unreachable .
+//	podman run --rm sing-tun-resolved-repro-resolved-unreachable
 //
 // Exit code 0 means the defect reproduced, 3 means the trigger was absent (you are
 // running where systemd-resolved works, so there is nothing to swallow).
@@ -30,17 +30,17 @@ func main() {
 	requestedInterface := flag.String("i", "", "interface to configure (default: Bettbox, else the first non-loopback link)")
 	flag.Parse()
 
-	fmt.Println("== Bettbox#531: systemd-resolved absent, resolvectl fails, sing-tun swallows it ==")
+	fmt.Println("== systemd-resolved is not running: resolvectl fails, sing-tun swallows it ==")
 	fmt.Println()
 
 	interfaceName := resolveInterface(*requestedInterface)
 	fmt.Printf("interface under test: %s\n", interfaceName)
 
-	// Preconditions of the issue: resolvectl is present, so LookPath succeeds and
-	// sing-tun proceeds; systemd-resolved is not, so nothing is listening.
+	// Precondition: resolvectl is present, so LookPath succeeds and sing-tun
+	// proceeds; systemd-resolved is not, so nothing is listening.
 	if resolvectlrepro.Reachable() {
-		fmt.Println("TRIGGER ABSENT: systemd-resolved answers on this machine, so the #531 trigger is not present.")
-		fmt.Println("               Use the image from issue531/Dockerfile, where it is masked.")
+		fmt.Println("TRIGGER ABSENT: systemd-resolved answers on this machine, so this trigger is not present.")
+		fmt.Println("               Use the image from resolved-unreachable/Dockerfile, where it is masked.")
 		os.Exit(3)
 	}
 	fmt.Println("precondition ok: systemd-resolved does NOT answer (the Arch default)")

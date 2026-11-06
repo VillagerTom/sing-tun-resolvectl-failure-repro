@@ -1,12 +1,12 @@
-# Bettbox#531 — systemd-resolved is not running.
+# systemd-resolved is not running.
 #
 # This is the Arch Linux default: NetworkManager owns /etc/resolv.conf, so nothing
 # needs systemd-resolved and it stays disabled. The `resolvectl` binary is still
 # installed, which is precisely why sing-tun's exec.LookPath("resolvectl") succeeds
 # and the code proceeds to run three commands that all fail.
 #
-#   podman build -f issue531/Dockerfile -t sing-tun-resolved-repro-531 .
-#   podman run --rm sing-tun-resolved-repro-531
+#   podman build -f resolved-unreachable/Dockerfile -t sing-tun-resolved-repro-resolved-unreachable .
+#   podman run --rm sing-tun-resolved-repro-resolved-unreachable
 #
 # Nothing from the host is involved; the image is self-contained.
 
@@ -15,8 +15,8 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY internal ./internal
-COPY issue531 ./issue531
-RUN CGO_ENABLED=0 go build -trimpath -o /out/repro531 ./issue531
+COPY resolved-unreachable ./resolved-unreachable
+RUN CGO_ENABLED=0 go build -trimpath -o /out/repro ./resolved-unreachable
 
 FROM docker.io/library/archlinux:latest
 
@@ -36,14 +36,14 @@ RUN ln -s /dev/null /etc/systemd/system/systemd-resolved.service \
 	&& ln -s /dev/null /etc/systemd/system/org.freedesktop.resolve1.service \
 	&& rm -f /usr/share/dbus-1/system-services/org.freedesktop.resolve1.service
 
-COPY --from=build /out/repro531 /usr/local/bin/repro531
+COPY --from=build /out/repro /usr/local/bin/repro
 
 # Only the system bus is started. With no resolved behind it, every resolvectl call
-# fails on connect - which is the condition the issue describes.
+# fails on connect - which is the condition under test.
 #
 # dbus-daemon is detached with its output redirected, otherwise it keeps the
 # container's stdout open and `podman run` never sees EOF.
 ENTRYPOINT mkdir -p /run/dbus \
 	&& rm -f /run/dbus/pid \
 	&& dbus-daemon --system --fork >/dev/null 2>&1 \
-	&& exec /usr/local/bin/repro531
+	&& exec /usr/local/bin/repro

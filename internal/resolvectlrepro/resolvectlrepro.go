@@ -16,12 +16,13 @@
 // t.options.Logger, and the function returns nil, so the tunnel comes up looking
 // healthy while DNS was never configured.
 //
-// Bettbox#531 and Bettbox#522 are the same defect with different triggers:
+// The same defect has two independent triggers, which is why there are two repros:
 //
-//	#531  systemd-resolved is not running
-//	      -> "Failed to connect to service /run/systemd/resolve/io.systemd.Resolve: ..."
-//	#522  polkit denies because no authentication agent is registered yet
-//	      -> "Access denied as the requested operation requires interactive authentication..."
+//	resolved-unreachable  systemd-resolved is not running, so every D-Bus call dies
+//	                      -> "Failed to connect to service /run/systemd/resolve/io.systemd.Resolve: ..."
+//	polkit-denied         systemd-resolved is reachable, but polkit refuses because no
+//	                      authentication agent is registered yet
+//	                      -> "Access denied as the requested operation requires interactive authentication..."
 //
 // Witness runs the identical argv with stderr captured, so a repro can show what
 // the silent shape threw away.
@@ -43,7 +44,7 @@ var (
 	// ResolvedAbsent: every variant resolvectl uses when it cannot reach
 	// systemd-resolved, whether or not D-Bus activation is consulted.
 	ResolvedAbsent = []string{"io.systemd.Resolve", "org.freedesktop.resolve1"}
-	// PolkitDenied: the interactive-authorization denial of Bettbox#522.
+	// PolkitDenied: the interactive-authorization denial behind the polkit-denied repro.
 	PolkitDenied = []string{"interactive authentication", "Access denied"}
 )
 
@@ -63,7 +64,7 @@ var (
 // This mirrors Options.DNSServerAddress() rather than calling it: this module
 // deliberately does not depend on sing-tun, so that the container images stay small
 // (importing it would drag in mipstack and gvisor). The values are pinned from the
-// other side instead — tests/issue531_test.go asserts that the real
+// other side instead — testdata/resolved_unreachable_test.go asserts that the real
 // Options.DNSServerAddress() produces exactly this argv, including
 // `dns Bettbox 198.18.0.2 fdfe:dcba:9876::2` — so any drift is caught there.
 func DNSServers(inet4Address, inet6Address []netip.Prefix) []string {

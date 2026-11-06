@@ -1,6 +1,7 @@
 //go:build linux
 
-// Shared harness for the Bettbox#531 / Bettbox#522 repros in this directory.
+// Shared harness for the two repros in this directory: resolved-unreachable and
+// polkit-denied.
 //
 // It provides three things and nothing else:
 //

@@ -1,5 +1,5 @@
 sing-tun/
-tests/
-bugreport/
+testdata/
+patch/
 Makefile
 README.md

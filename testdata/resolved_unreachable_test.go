@@ -1,6 +1,6 @@
 //go:build linux
 
-// Repro for https://github.com/appshubcc/Bettbox/issues/531
+// Repro: systemd-resolved is not running.
 //
 // Trigger: systemd-resolved is not installed/enabled. This is the Arch default -
 // NetworkManager owns resolv.conf, so `systemctl enable systemd-resolved` is
@@ -10,7 +10,7 @@
 //
 // This file is not part of sing-tun. It is copied into the tree by `make sync` and
 // removed again by `make clean`; see ../Makefile. For the real trigger, with no
-// stub at all, use the container image built from ../issue531/Dockerfile.
+// stub at all, use the container image built from ../resolved-unreachable/Dockerfile.
 //
 // # WHAT THIS TEST PROVES
 //
@@ -32,9 +32,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestReproIssue531ResolvedAbsent(t *testing.T) {
+func TestReproResolvedUnreachable(t *testing.T) {
 	// Verbatim stderr resolvectl produces when it cannot reach
-	// /run/systemd/resolve/io.systemd.Resolve (issue #531, Arch default state).
+	// /run/systemd/resolve/io.systemd.Resolve (Arch default state).
 	const resolvectlStderr = "Failed to connect to service " +
 		"/run/systemd/resolve/io.systemd.Resolve: No such file or directory\n"
 
@@ -81,6 +81,7 @@ func TestReproIssue531ResolvedAbsent(t *testing.T) {
 	// The defect: three failed writes, zero records emitted. DNS was never
 	// configured for this interface, yet nothing says so.
 	require.NotEmpty(t, recorder.Records(),
-		"Bettbox#531: all three resolvectl writes failed, setSearchDomainForSystemdResolved "+
-			"returned nil, and nothing was logged - the DNS takeover failed silently")
+		"resolved unreachable: all three resolvectl writes failed, "+
+			"setSearchDomainForSystemdResolved returned nil, and nothing was logged - "+
+			"the DNS takeover failed silently")
 }
