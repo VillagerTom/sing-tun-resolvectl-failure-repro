@@ -5,8 +5,8 @@
 # installed, which is precisely why sing-tun's exec.LookPath("resolvectl") succeeds
 # and the code proceeds to run three commands that all fail.
 #
-#   podman build -f resolved-unreachable/Dockerfile -t sing-tun-resolved-repro-resolved-unreachable .
-#   podman run --rm sing-tun-resolved-repro-resolved-unreachable
+#   podman build -f resolved-absent/Dockerfile -t sing-tun-resolved-repro-resolved-absent .
+#   podman run --rm sing-tun-resolved-repro-resolved-absent
 #
 # Nothing from the host is involved; the image is self-contained.
 
@@ -15,8 +15,8 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY internal ./internal
-COPY resolved-unreachable ./resolved-unreachable
-RUN CGO_ENABLED=0 go build -trimpath -o /out/repro ./resolved-unreachable
+COPY resolved-absent ./resolved-absent
+RUN CGO_ENABLED=0 go build -trimpath -o /out/repro ./resolved-absent
 
 FROM docker.io/library/archlinux:latest
 

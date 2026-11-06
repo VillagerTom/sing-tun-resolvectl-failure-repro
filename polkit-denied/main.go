@@ -33,7 +33,7 @@ func main() {
 	interfaceName := flag.String("i", resolvectlrepro.DefaultInterface, "interface to configure")
 	flag.Parse()
 
-	fmt.Println("== polkit denies because no authentication agent is registered: sing-tun swallows it ==")
+	fmt.Println("== polkit-denied: polkit denies, no authentication agent registered, sing-tun swallows it ==")
 	fmt.Println()
 
 	// Polkit is skipped when the caller is EUID 0, because sd_bus_privilege_op
@@ -48,10 +48,10 @@ func main() {
 	fmt.Printf("caller: uid=%d (unprivileged, so polkit is consulted)\n", os.Geteuid())
 
 	if !resolvectlrepro.Reachable() {
-		fmt.Println("TRIGGER ABSENT: systemd-resolved does not answer, so this is the resolved-unreachable trigger.")
+		fmt.Println("TRIGGER ABSENT: systemd-resolved does not answer, so this is the resolved-absent trigger.")
 		os.Exit(3)
 	}
-	fmt.Println("precondition ok: systemd-resolved is reachable (unlike the resolved-unreachable case, the D-Bus call succeeds)")
+	fmt.Println("precondition ok: systemd-resolved is reachable (unlike the resolved-absent case, the D-Bus call succeeds)")
 	fmt.Printf("interface under test: %s\n\n", *interfaceName)
 
 	servers := resolvectlrepro.DNSServers(

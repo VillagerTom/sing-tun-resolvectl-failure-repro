@@ -1,6 +1,6 @@
 //go:build linux
 
-// Shared harness for the two repros in this directory: resolved-unreachable and
+// Shared harness for the two repros in this directory: resolved-absent and
 // polkit-denied.
 //
 // It provides three things and nothing else:

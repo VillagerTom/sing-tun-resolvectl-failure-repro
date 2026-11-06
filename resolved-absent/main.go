@@ -7,8 +7,8 @@
 //
 // Run it in the container built from ./Dockerfile:
 //
-//	podman build -f resolved-unreachable/Dockerfile -t sing-tun-resolved-repro-resolved-unreachable .
-//	podman run --rm sing-tun-resolved-repro-resolved-unreachable
+//	podman build -f resolved-absent/Dockerfile -t sing-tun-resolved-repro-resolved-absent .
+//	podman run --rm sing-tun-resolved-repro-resolved-absent
 //
 // Exit code 0 means the defect reproduced, 3 means the trigger was absent (you are
 // running where systemd-resolved works, so there is nothing to swallow).
@@ -30,7 +30,7 @@ func main() {
 	requestedInterface := flag.String("i", "", "interface to configure (default: tun0, else the first non-loopback link)")
 	flag.Parse()
 
-	fmt.Println("== systemd-resolved is not running: resolvectl fails, sing-tun swallows it ==")
+	fmt.Println("== resolved-absent: systemd-resolved is not running, sing-tun swallows the failures ==")
 	fmt.Println()
 
 	interfaceName := resolveInterface(*requestedInterface)
@@ -40,7 +40,7 @@ func main() {
 	// proceeds; systemd-resolved is not, so nothing is listening.
 	if resolvectlrepro.Reachable() {
 		fmt.Println("TRIGGER ABSENT: systemd-resolved answers on this machine, so this trigger is not present.")
-		fmt.Println("               Use the image from resolved-unreachable/Dockerfile, where it is masked.")
+		fmt.Println("               Use the image from resolved-absent/Dockerfile, where it is masked.")
 		os.Exit(3)
 	}
 	fmt.Println("precondition ok: systemd-resolved does NOT answer (the Arch default)")
@@ -102,7 +102,7 @@ func main() {
 		fmt.Printf("NOT REPRODUCED: only %d/%d writes failed.\n", failed, len(attempts))
 		os.Exit(1)
 	}
-	fmt.Printf("REPRODUCED: %d/%d resolvectl writes failed because systemd-resolved is unreachable,\n", failed, len(attempts))
+	fmt.Printf("REPRODUCED: %d/%d resolvectl writes failed because systemd-resolved is absent,\n", failed, len(attempts))
 	fmt.Println("              and sing-tun reported success with no log output. The same information")
 	fmt.Println("              would appear if the errors were not discarded.")
 }

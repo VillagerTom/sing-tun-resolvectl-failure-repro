@@ -33,7 +33,7 @@ does log at Debug — so only the write path is invisible.
 
 | scenario | trigger | `resolvectl` says | field report |
 | --- | --- | --- | --- |
-| **resolved-unreachable** | `systemd-resolved` is not running (Arch default — NetworkManager owns `resolv.conf`) | `Failed to connect to service /run/systemd/resolve/io.systemd.Resolve: …` | [Bettbox#531](https://github.com/appshubcc/Bettbox/issues/531) |
+| **resolved-absent** | `systemd-resolved` is not running (Arch default — NetworkManager owns `resolv.conf`) | `Failed to connect to service /run/systemd/resolve/io.systemd.Resolve: …` | [Bettbox#531](https://github.com/appshubcc/Bettbox/issues/531) |
 | **polkit-denied** | `systemd-resolved` is running, but polkit denies because no authentication agent is registered yet | `Access denied as the requested operation requires interactive authentication. …` | [Bettbox#522](https://github.com/appshubcc/Bettbox/issues/522) |
 
 The last column links the field reports the two triggers were observed in; this
@@ -45,7 +45,7 @@ repository reproduces them and carries no report text of its own.
 | --- | --- |
 | `sing-tun/` | git submodule, pinned to `MetaCubeX/sing-tun@bfc9055` (`meta`, v0.4.27-5) — the revision the patch targets |
 | `testdata/` | in-package tests that call the **real** unexported function; copied into `sing-tun/` by `make sync`, removed by `make clean` |
-| `resolved-unreachable/` | standalone repro program + Dockerfile — `systemd-resolved` not running |
+| `resolved-absent/` | standalone repro program + Dockerfile — `systemd-resolved` not running |
 | `polkit-denied/` | standalone repro program + Dockerfile — polkit denies, no auth agent |
 | `internal/resolvectlrepro/` | harness both call shapes go through, so "silent" and "witnessed" provably issue the identical argv |
 | `patch/` | the proposed fix, as a git-applicable patch |
@@ -62,7 +62,7 @@ make help
 | target | what it does |
 | --- | --- |
 | `make test` | copies `testdata/` into the submodule and runs both repro tests. **Expected to FAIL** against the unfixed tree — that failure is the defect. |
-| `make resolved-unreachable` | builds and runs the `systemd-resolved`-not-running container |
+| `make resolved-absent` | builds and runs the `systemd-resolved`-not-running container |
 | `make polkit-denied` | builds and runs the polkit-denied container (needs `--privileged`) |
 | `make verify-fix` | applies `patch/`, re-runs `make test` — expected to **PASS** — then reverts |
 | `make sync` / `make clean` | copy the fixtures into the submodule / take them back out |
@@ -87,7 +87,7 @@ failures proves nothing on its own: an unknown interface name fails before `reso
 ever reaches systemd, and would satisfy a naive "3/3 failed" verdict while the intended
 trigger never happened. Both standalone programs therefore match each failure against the
 expected signature (`io.systemd.Resolve` / `org.freedesktop.resolve1` for
-`resolved-unreachable`, `interactive authentication` / `Access denied` for
+`resolved-absent`, `interactive authentication` / `Access denied` for
 `polkit-denied`) and refuse to claim a reproduction otherwise:
 
 ```
@@ -100,7 +100,7 @@ NOT REPRODUCED: 3/3 writes failed, but not for the reason under test.
 This is not hypothetical — it is exactly what the first version of the `polkit-denied`
 image did, because it never created the `tun0` link.
 
-`resolved-unreachable/main.go` and `polkit-denied/main.go` run sing-tun's exact call shape
+`resolved-absent/main.go` and `polkit-denied/main.go` run sing-tun's exact call shape
 and then re-issue the identical commands with stderr captured, printing "what sing-tun
 sees" and "what was thrown away" side by side:
 
@@ -139,13 +139,13 @@ synchronous. Making the failure observable is the part that was missing.
 `make verify-fix` demonstrates the transition:
 
 ```
-before:  --- FAIL: TestReproResolvedUnreachable
-after:   --- PASS: TestReproResolvedUnreachable
+before:  --- FAIL: TestReproResolvedAbsent
+after:   --- PASS: TestReproResolvedAbsent
 ```
 
 ## Notes on the environments
 
-- **`resolved-unreachable` reproduces on any host where `systemd-resolved` is absent** —
+- **`resolved-absent` reproduces on any host where `systemd-resolved` is absent** —
   the Arch Linux default. The exact wording of `resolvectl`'s failure depends on how it
   is absent: masked gives `Could not activate remote peer …`, not activatable at all
   gives `The name org.freedesktop.resolve1 was not provided by any .service files`, and a

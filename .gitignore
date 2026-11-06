@@ -1,5 +1,5 @@
 # The fixtures in testdata/ are copied into the submodule by `make sync`; `make clean`
 # removes them again. This only guards against a run that was interrupted.
 sing-tun/harness_test.go
-sing-tun/resolved_unreachable_test.go
+sing-tun/resolved_absent_test.go
 sing-tun/polkit_denied_test.go

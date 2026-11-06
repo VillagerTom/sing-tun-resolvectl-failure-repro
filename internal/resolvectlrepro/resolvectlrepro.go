@@ -18,7 +18,7 @@
 //
 // The same defect has two independent triggers, which is why there are two repros:
 //
-//	resolved-unreachable  systemd-resolved is not running, so every D-Bus call dies
+//	resolved-absent  systemd-resolved is not running, so every D-Bus call dies
 //	                      -> "Failed to connect to service /run/systemd/resolve/io.systemd.Resolve: ..."
 //	polkit-denied         systemd-resolved is reachable, but polkit refuses because no
 //	                      authentication agent is registered yet
@@ -65,7 +65,7 @@ var (
 // This mirrors Options.DNSServerAddress() rather than calling it: this module
 // deliberately does not depend on sing-tun, so that the container images stay small
 // (importing it would drag in mipstack and gvisor). The values are pinned from the
-// other side instead — testdata/resolved_unreachable_test.go asserts that the real
+// other side instead — testdata/resolved_absent_test.go asserts that the real
 // Options.DNSServerAddress() produces exactly this argv, including
 // `dns tun0 198.18.0.2 fdfe:dcba:9876::2` — so any drift is caught there.
 func DNSServers(inet4Address, inet6Address []netip.Prefix) []string {

@@ -13,17 +13,17 @@ ENGINE ?= podman
 IMAGE_PREFIX ?= sing-tun-resolved-repro
 
 SUBMODULE := sing-tun
-TESTS := harness_test.go resolved_unreachable_test.go polkit_denied_test.go
+TESTS := harness_test.go resolved_absent_test.go polkit_denied_test.go
 PATCH := patch/0001-log-resolvectl-failures-in-setSearchDomainForSystemdResolved.patch
 
-.PHONY: help submodule sync test clean resolved-unreachable polkit-denied verify-fix all
+.PHONY: help submodule sync test clean resolved-absent polkit-denied verify-fix all
 
 help:
 	@echo 'submodule             fetch/check out the sing-tun revision under test'
 	@echo 'sync                  copy testdata/ into $(SUBMODULE)/ (required before test)'
 	@echo 'test                  run both in-package repro tests (expected to FAIL - that is the defect)'
 	@echo 'verify-fix            apply patch/, re-run test (expected to PASS), then revert'
-	@echo 'resolved-unreachable  build + run the systemd-resolved-not-running repro container'
+	@echo 'resolved-absent  build + run the systemd-resolved-not-running repro container'
 	@echo 'polkit-denied         build + run the polkit-denied repro container (needs --privileged)'
 	@echo 'clean                 remove the synced test files'
 	@echo 'all                   test + both containers'
@@ -54,10 +54,10 @@ clean:
 	@cd $(SUBMODULE) && rm -f $(TESTS)
 	@echo 'removed $(TESTS) from $(SUBMODULE)/'
 
-resolved-unreachable:
-	$(ENGINE) build -f resolved-unreachable/Dockerfile \
-		-t $(IMAGE_PREFIX)-resolved-unreachable .
-	$(ENGINE) run --rm $(IMAGE_PREFIX)-resolved-unreachable
+resolved-absent:
+	$(ENGINE) build -f resolved-absent/Dockerfile \
+		-t $(IMAGE_PREFIX)-resolved-absent .
+	$(ENGINE) run --rm $(IMAGE_PREFIX)-resolved-absent
 
 # --privileged is needed because systemd-resolved drops privileges to the
 # systemd-resolve user and refuses to start without CAP_SETUID/CAP_SETPCAP, and
@@ -67,4 +67,4 @@ polkit-denied:
 		-t $(IMAGE_PREFIX)-polkit-denied .
 	$(ENGINE) run --rm --privileged $(IMAGE_PREFIX)-polkit-denied
 
-all: test resolved-unreachable polkit-denied
+all: test resolved-absent polkit-denied
