@@ -31,13 +31,15 @@ The failure is swallowed twice over:
 DNS was never configured. The teardown counterpart, `unsetSearchDomainForSystemdResolved`,
 does log at Debug — so only the write path is invisible.
 
-| scenario | trigger | `resolvectl` says | field report |
-| --- | --- | --- | --- |
-| **resolved-absent** | `systemd-resolved` is not running (Arch default — NetworkManager owns `resolv.conf`) | `Failed to connect to service /run/systemd/resolve/io.systemd.Resolve: …` | [Bettbox#531](https://github.com/appshubcc/Bettbox/issues/531) |
-| **polkit-denied** | `systemd-resolved` is running, but polkit denies because no authentication agent is registered yet | `Access denied as the requested operation requires interactive authentication. …` | [Bettbox#522](https://github.com/appshubcc/Bettbox/issues/522) |
+| scenario | trigger | `resolvectl` says |
+| --- | --- | --- |
+| **resolved-absent** | `systemd-resolved` is not running (Arch default — NetworkManager owns `resolv.conf`) | `Failed to connect to service /run/systemd/resolve/io.systemd.Resolve: …` |
+| **polkit-denied** | `systemd-resolved` is running, but polkit denies because no authentication agent is registered yet | `Access denied as the requested operation requires interactive authentication. …` |
 
-The last column links the field reports the two triggers were observed in; this
-repository reproduces them and carries no report text of its own.
+## Field reports
+
+- `resolved-absent` — [Bettbox#531](https://github.com/appshubcc/Bettbox/issues/531)
+- `polkit-denied` — [Bettbox#522](https://github.com/appshubcc/Bettbox/issues/522)
 
 ## Layout
 
