@@ -3,9 +3,9 @@
 Reproductions and the proposed patch for a silent error-swallowing defect in
 [`MetaCubeX/sing-tun`](https://github.com/MetaCubeX/sing-tun).
 
-One defect, two independent triggers, two self-contained repros. None of them touches the
-host's DNS configuration: the in-package tests put a `resolvectl` stand-in on `PATH`, and
-the two container images stage the real failure conditions from scratch.
+One defect, two independent triggers. The in-package tests put a `resolvectl` stand-in on
+`PATH`; the two container images stage the real failure conditions from scratch. Neither
+touches the host's DNS configuration. `patch/` carries the proposed fix.
 
 ## The defect
 
@@ -35,11 +35,6 @@ does log at Debug — so only the write path is invisible.
 | --- | --- | --- |
 | **resolved-absent** | `systemd-resolved` is not running (Arch default — NetworkManager owns `resolv.conf`) | `Failed to connect to service /run/systemd/resolve/io.systemd.Resolve: …` |
 | **polkit-denied** | `systemd-resolved` is running, but polkit denies because no authentication agent is registered yet | `Access denied as the requested operation requires interactive authentication. …` |
-
-## Field reports
-
-- `resolved-absent` — [Bettbox#531](https://github.com/appshubcc/Bettbox/issues/531)
-- `polkit-denied` — [Bettbox#522](https://github.com/appshubcc/Bettbox/issues/522)
 
 ## Layout
 
@@ -81,7 +76,7 @@ vacuously:
    `dns tun0 198.18.0.2 fdfe:dcba:9876::2` as derived from the fake-ip range
    `198.18.0.0/15`;
 2. **the commands really failed and the message existed** — replaying one with stderr
-   captured returns the text quoted in the table above;
+   captured returns the text quoted in the scenario table;
 3. **the defect** — the logger saw nothing while three writes failed.
 
 Step 2 deserves a note. Every `resolvectl` failure is a non-zero exit, so counting
@@ -107,6 +102,7 @@ and then re-issue the identical commands with stderr captured, printing "what si
 sees" and "what was thrown away" side by side:
 
 ```
+$ make polkit-denied
 --- (1) sing-tun's call shape: (*NativeTun).setSearchDomainForSystemdResolved ---
 returned error: <nil>   <-- configure() calls this a success
 log output:    <no log record at all>
@@ -123,7 +119,9 @@ REPRODUCED: 3/3 resolvectl writes denied by polkit,
 ```
 
 Both programs exit `0` when the defect reproduced, `3` when their trigger is absent, and
-`1` when it did not reproduce — never a false success.
+`1` when it did not reproduce — never a false success. Note the inversion: the tests assert
+the fixed behaviour, so they fail while the defect exists; the programs report that the
+defect reproduced, so they exit `0` while it exists.
 
 ## The fix
 
@@ -142,7 +140,9 @@ synchronous. Making the failure observable is the part that was missing.
 
 ```
 before:  --- FAIL: TestReproResolvedAbsent
+         --- FAIL: TestReproPolkitDenied
 after:   --- PASS: TestReproResolvedAbsent
+         --- PASS: TestReproPolkitDenied
 ```
 
 ## Notes on the environments
@@ -154,9 +154,11 @@ after:   --- PASS: TestReproResolvedAbsent
   merely disabled unit with a stale socket gives `Failed to connect to service
   /run/systemd/resolve/io.systemd.Resolve: …`. All three are the same condition, and the
   harness accepts any of them. The deterministic stub in `testdata/` replays the last one
-  verbatim. This image has no `CAP_NET_ADMIN` and so cannot create `tun0`; the program
-  falls back to the container's first non-loopback link and the printed argv names that
-  interface instead. Only the name changes, not the shape of the call.
+  verbatim.
+- **The `resolved-absent` image cannot create `tun0`** — it has no `CAP_NET_ADMIN` and does
+  not need `--privileged`, so the program falls back to the container's first non-loopback
+  link and prints that name in the argv instead. Only the name changes, not the shape of
+  the call.
 - **`polkit-denied` needs the real polkit denial**, which cannot be staged with a stub:
   the check happens inside `resolvectl`, against the real
   `org.freedesktop.resolve1.policy` actions. The Dockerfile starts `dbus-daemon`,
@@ -165,12 +167,12 @@ after:   --- PASS: TestReproResolvedAbsent
   first, and runs the repro as uid 1000. `--privileged` is required both because
   `systemd-resolved` drops privileges to the `systemd-resolve` user and because the tap
   device needs `CAP_NET_ADMIN`.
-- The `polkit-denied` image also prints the control case before dropping privileges: the
+- **The `polkit-denied` image also prints the control case** before dropping privileges: the
   same three commands **succeed** as root, because `sd_bus_query_sender_privilege()`
   reports the sender as privileged and polkit is never consulted. Only a genuinely
   privileged sender skips polkit, which is why a client with `cap_net_admin` breaks where
   a setuid build does not.
-- That trigger is transient and policy-dependent: the same binary on the same machine
+- **That trigger is transient and policy-dependent** — the same binary on the same machine
   succeeds a minute later, once the desktop agent has registered. Nothing in the logs
   hints that the earlier attempt ever happened, and `resolvectl status` shows the link
   with `Current Scopes: none` and `Default Route: no`.
@@ -208,3 +210,8 @@ separate storage root (`podman --storage-driver fuse-overlayfs`).
 
 `podman run` never needs any of this — it uses the storage driver, not an overlay over the
 build context — so a host that cannot build can still run a previously built image.
+
+## Field reports
+
+- `resolved-absent` — [Bettbox#531](https://github.com/appshubcc/Bettbox/issues/531)
+- `polkit-denied` — [Bettbox#522](https://github.com/appshubcc/Bettbox/issues/522)
