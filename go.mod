@@ -1,4 +1,4 @@
-module github.com/local/sing-tun-resolved-repro
+module github.com/local/sing-tun-resolvectl-failure-repro
 
 go 1.24
 

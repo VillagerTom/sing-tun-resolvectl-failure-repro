@@ -5,8 +5,8 @@
 # installed, which is precisely why sing-tun's exec.LookPath("resolvectl") succeeds
 # and the code proceeds to run three commands that all fail.
 #
-#   podman build -f resolved-absent/Dockerfile -t sing-tun-resolved-repro-resolved-absent .
-#   podman run --rm sing-tun-resolved-repro-resolved-absent
+#   podman build -f resolved-absent/Dockerfile -t sing-tun-resolvectl-failure-repro-resolved-absent .
+#   podman run --rm sing-tun-resolvectl-failure-repro-resolved-absent
 #
 # Nothing from the host is involved; the image is self-contained.
 

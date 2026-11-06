@@ -12,8 +12,8 @@
 // container where systemd-resolved and polkit are up, the caller is unprivileged, and
 // no authentication agent exists:
 //
-//	podman build -f polkit-denied/Dockerfile -t sing-tun-resolved-repro-polkit-denied .
-//	podman run --rm --privileged sing-tun-resolved-repro-polkit-denied
+//	podman build -f polkit-denied/Dockerfile -t sing-tun-resolvectl-failure-repro-polkit-denied .
+//	podman run --rm --privileged sing-tun-resolvectl-failure-repro-polkit-denied
 //
 // Exit code 0 means the defect reproduced, 3 means the trigger was absent (you are
 // root, or an agent is registered).
@@ -26,7 +26,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/local/sing-tun-resolved-repro/internal/resolvectlrepro"
+	"github.com/local/sing-tun-resolvectl-failure-repro/internal/resolvectlrepro"
 )
 
 func main() {

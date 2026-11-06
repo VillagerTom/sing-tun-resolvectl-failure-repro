@@ -5,8 +5,8 @@
 # desktop means logging out and back in with a client set to autostart. This image
 # reproduces it instead, so the host's DNS configuration is never touched.
 #
-#   podman build -f polkit-denied/Dockerfile -t sing-tun-resolved-repro-polkit-denied .
-#   podman run --rm --privileged sing-tun-resolved-repro-polkit-denied
+#   podman build -f polkit-denied/Dockerfile -t sing-tun-resolvectl-failure-repro-polkit-denied .
+#   podman run --rm --privileged sing-tun-resolvectl-failure-repro-polkit-denied
 #
 # --privileged is required: systemd-resolved drops privileges to the systemd-resolve
 # user, and the repro needs CAP_NET_ADMIN below to create the link resolvectl is

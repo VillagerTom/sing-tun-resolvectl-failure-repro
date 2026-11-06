@@ -1,4 +1,4 @@
-# sing-tun-resolved-repro
+# sing-tun-resolvectl-failure-repro
 
 Reproductions and the proposed patch for a silent error-swallowing defect in
 [`MetaCubeX/sing-tun`](https://github.com/MetaCubeX/sing-tun).
@@ -55,8 +55,8 @@ does log at Debug — so only the write path is invisible.
 ## Usage
 
 ```sh
-git clone --recurse-submodules <url> sing-tun-resolved-repro
-cd sing-tun-resolved-repro
+git clone --recurse-submodules <url> sing-tun-resolvectl-failure-repro
+cd sing-tun-resolvectl-failure-repro
 
 make help
 ```

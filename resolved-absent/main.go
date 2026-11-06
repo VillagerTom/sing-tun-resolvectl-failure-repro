@@ -7,8 +7,8 @@
 //
 // Run it in the container built from ./Dockerfile:
 //
-//	podman build -f resolved-absent/Dockerfile -t sing-tun-resolved-repro-resolved-absent .
-//	podman run --rm sing-tun-resolved-repro-resolved-absent
+//	podman build -f resolved-absent/Dockerfile -t sing-tun-resolvectl-failure-repro-resolved-absent .
+//	podman run --rm sing-tun-resolvectl-failure-repro-resolved-absent
 //
 // Exit code 0 means the defect reproduced, 3 means the trigger was absent (you are
 // running where systemd-resolved works, so there is nothing to swallow).
@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/local/sing-tun-resolved-repro/internal/resolvectlrepro"
+	"github.com/local/sing-tun-resolvectl-failure-repro/internal/resolvectlrepro"
 )
 
 func main() {

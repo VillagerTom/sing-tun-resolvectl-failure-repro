@@ -1,4 +1,4 @@
-# sing-tun-resolved-repro
+# sing-tun-resolvectl-failure-repro
 #
 # Two repros for the `resolvectl` silent error swallowing defect in
 # MetaCubeX/sing-tun, plus the patch that fixes it.
@@ -10,7 +10,7 @@
 # submodule itself is never committed with them.
 
 ENGINE ?= podman
-IMAGE_PREFIX ?= sing-tun-resolved-repro
+IMAGE_PREFIX ?= sing-tun-resolvectl-failure-repro
 
 SUBMODULE := sing-tun
 TESTS := harness_test.go resolved_absent_test.go polkit_denied_test.go
