@@ -62,7 +62,7 @@ make help
 | target | what it does |
 | --- | --- |
 | `make test` | copies `testdata/` into the submodule and runs both repro tests. **Expected to FAIL** against the unfixed tree — that failure is the defect. |
-| `make resolved-absent` | builds and runs the `systemd-resolved`-not-running container |
+| `make resolved-absent` | builds and runs the resolved-absent container |
 | `make polkit-denied` | builds and runs the polkit-denied container (needs `--privileged`) |
 | `make verify-fix` | applies `patch/`, re-runs `make test` — expected to **PASS** — then reverts |
 | `make sync` / `make clean` | copy the fixtures into the submodule / take them back out |

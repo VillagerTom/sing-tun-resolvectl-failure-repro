@@ -23,7 +23,7 @@ help:
 	@echo 'sync                  copy testdata/ into $(SUBMODULE)/ (required before test)'
 	@echo 'test                  run both in-package repro tests (expected to FAIL - that is the defect)'
 	@echo 'verify-fix            apply patch/, re-run test (expected to PASS), then revert'
-	@echo 'resolved-absent  build + run the systemd-resolved-not-running repro container'
+	@echo 'resolved-absent       build + run the resolved-absent repro container'
 	@echo 'polkit-denied         build + run the polkit-denied repro container (needs --privileged)'
 	@echo 'clean                 remove the synced test files'
 	@echo 'all                   test + both containers'
