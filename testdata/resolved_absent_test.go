@@ -2,7 +2,7 @@
 
 // Repro: systemd-resolved is not running.
 //
-// Trigger: systemd-resolved is not installed/enabled. This is the Arch default -
+// Trigger: systemd-resolved is not installed/enabled. This is the Arch Linux default -
 // NetworkManager owns resolv.conf, so `systemctl enable systemd-resolved` is
 // never needed and never happens. The `resolvectl` binary itself may well be
 // present, so `exec.LookPath` succeeds and sing-tun proceeds, but every D-Bus call
@@ -34,7 +34,7 @@ import (
 
 func TestReproResolvedAbsent(t *testing.T) {
 	// Verbatim stderr resolvectl produces when it cannot reach
-	// /run/systemd/resolve/io.systemd.Resolve (Arch default state).
+	// /run/systemd/resolve/io.systemd.Resolve (Arch Linux default state).
 	const resolvectlStderr = "Failed to connect to service " +
 		"/run/systemd/resolve/io.systemd.Resolve: No such file or directory\n"
 

@@ -20,21 +20,20 @@ RUN CGO_ENABLED=0 go build -trimpath -o /out/repro ./resolved-absent
 
 FROM docker.io/library/archlinux:latest
 
-# systemd provides resolvectl. It is deliberately never started: see the mask below.
+# systemd provides resolvectl, the binary sing-tun looks for through PATH. The daemon is
+# installed but deliberately never started.
 RUN pacman -Syu --noconfirm --needed systemd \
 	&& rm -rf /var/cache/pacman/pkg/* /var/lib/pacman/sync/*
 
-# resolved is installed but unavailable, deterministically.
+# resolved is installed but unreachable, deterministically.
 #
-# Masking the unit alone is not enough and gives a confusing message: D-Bus still
-# finds the activation entry and tries to execute the masked unit, so resolvectl
-# reports "Failed to execute program org.freedesktop.resolve1: Permission denied",
-# which reads like a permissions problem rather than an absent resolver. Removing the
-# D-Bus activation entry as well makes the cause unambiguous:
-# "The name org.freedesktop.resolve1 was not provided by any .service files".
-RUN ln -s /dev/null /etc/systemd/system/systemd-resolved.service \
-	&& ln -s /dev/null /etc/systemd/system/org.freedesktop.resolve1.service \
-	&& rm -f /usr/share/dbus-1/system-services/org.freedesktop.resolve1.service
+# Nothing here runs systemd as PID 1, so masking the unit would change nothing: resolvectl
+# talks to the system bus, not to systemd, and the bus is what starts resolved on demand.
+# That path is the activation entry below. Left in place it produced
+# "Failed to execute program org.freedesktop.resolve1: Permission denied", which reads like
+# a permissions problem rather than an absent resolver. Removing it makes the cause
+# unambiguous: "The name org.freedesktop.resolve1 was not provided by any .service files".
+RUN rm -f /usr/share/dbus-1/system-services/org.freedesktop.resolve1.service
 
 COPY --from=build /out/repro /usr/local/bin/repro
 

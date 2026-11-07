@@ -38,7 +38,7 @@ does log at Debug — so only the write path is invisible.
 
 | scenario | trigger | `resolvectl` says |
 | --- | --- | --- |
-| **resolved-absent** | `systemd-resolved` is not running (Arch default — NetworkManager owns `resolv.conf`) | `Failed to connect to service /run/systemd/resolve/io.systemd.Resolve: …` |
+| **resolved-absent** | `systemd-resolved` is not running (Arch Linux default — NetworkManager owns `resolv.conf`) | `Failed to connect to service /run/systemd/resolve/io.systemd.Resolve: …` |
 | **polkit-denied** | `systemd-resolved` is running, but polkit denies because no authentication agent is registered yet | `Access denied as the requested operation requires interactive authentication. …` |
 
 ## Layout

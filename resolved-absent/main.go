@@ -40,10 +40,10 @@ func main() {
 	// proceeds; systemd-resolved is not, so nothing is listening.
 	if resolvectlrepro.Reachable() {
 		fmt.Println("TRIGGER ABSENT: systemd-resolved answers on this machine, so this trigger is not present.")
-		fmt.Println("               Use the image from resolved-absent/Dockerfile, where it is masked.")
+		fmt.Println("               Use the image from resolved-absent/Dockerfile, where it is never started.")
 		os.Exit(3)
 	}
-	fmt.Println("precondition ok: systemd-resolved does NOT answer (the Arch default)")
+	fmt.Println("precondition ok: systemd-resolved does NOT answer (the Arch Linux default)")
 	if output, err := resolvectlrepro.Status(""); err == nil {
 		fmt.Printf("  resolvectl status: %s\n", strings.TrimSpace(firstLine(output)))
 	}
