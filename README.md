@@ -1,5 +1,10 @@
 # sing-tun-resolvectl-failure-repro
 
+> **AI assistance.** The reproductions, tests, patch and documentation were written with
+> assistance from DeepSeek V4.1 Flash running in [OpenCode](https://opencode.ai). Every
+> result was reproduced locally — the failing runs, the patched runs and both container
+> images — rather than taken on trust.
+
 Reproductions and the proposed patch for a silent error-swallowing defect in
 [`MetaCubeX/sing-tun`](https://github.com/MetaCubeX/sing-tun).
 
